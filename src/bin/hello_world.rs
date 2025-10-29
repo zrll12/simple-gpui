@@ -1,14 +1,12 @@
-
 use gpui::{
     App, Application, Bounds, Context, SharedString, Window, WindowBounds, WindowOptions, div,
     prelude::*, px, rgb, size,
 };
-use simple_gpui::component_property;
 use simple_gpui_core::component;
 
 #[component]
 fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-    component_property!(text: SharedString = SharedString::new("World1"));
+    component_property!(text: SharedString = SharedString::new("World"));
     component_property!(text2: SharedString);
 
     div()
@@ -24,7 +22,7 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
         .border_color(rgb(0x0000ff))
         .text_xl()
         .text_color(rgb(0xffffff))
-        .child(format!("Hello, {}!\nAnd hello {}", &self.text, &self.text2))
+        .child(format!("Hello, {}!\nAnd hello {} too!", &self.text, &self.text2))
         .child(
             div()
                 .flex()
@@ -47,8 +45,9 @@ fn main() {
                 ..Default::default()
             },
             |_, cx| {
-
-                cx.new(|_| HelloWorld::new(SharedString::new("HHU")))
+                cx.new(|_| {
+                    HelloWorld::new(SharedString::new("Rust")).text(SharedString::new("Shaded"))
+                })
             },
         )
         .unwrap();

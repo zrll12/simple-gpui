@@ -1,4 +1,4 @@
-use quote::quote;
+use quote::{format_ident, quote};
 
 // Generates an new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
@@ -30,5 +30,25 @@ pub fn generate_new_method(
                 #(#field_inits),*
             }
         }
+    }
+}
+
+pub fn generate_set_method(
+    properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
+) -> proc_macro2::TokenStream {
+    let functions = properties
+        .iter()
+        .map(|(ident, ty, _init)| {
+            let method_name = format_ident!("{}", ident);
+            quote! {
+                pub fn #method_name(mut self, value: #ty) -> Self {
+                    self.#ident = value;
+                    self
+                }
+            }
+        })
+        .collect::<Vec<_>>();
+    quote! {
+        #(#functions)*
     }
 }

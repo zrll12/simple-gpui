@@ -39,6 +39,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Generate methods
     let function_new = methods::generate_new_method(&properties);
+    let function_setters = methods::generate_set_method(&properties);
 
     let inputs = &func.sig.inputs;
     let output = &func.sig.output;
@@ -53,6 +54,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         impl #struct_name {
             #function_new
+            #function_setters
         }
 
         impl Render for #struct_name {
