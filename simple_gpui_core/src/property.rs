@@ -44,3 +44,19 @@ pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Opti
     }
     None
 }
+
+/// Extracts a statement like:
+///   with_context!();
+///   with_window!();
+/// returns (use_context, use_window)
+pub fn extract_uses(stmt: &Stmt) -> (bool, bool) {
+    if let Stmt::Macro(mac_stmt) = stmt {
+        let mac = &mac_stmt.mac;
+        if mac.path.is_ident("with_context") {
+            return (true, false);
+        } else if mac.path.is_ident("with_window") {
+            return (false, true);
+        }
+    }
+    (false, false)
+}

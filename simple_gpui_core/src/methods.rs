@@ -3,6 +3,7 @@ use quote::{format_ident, quote};
 // Generates an new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
     properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
+    temp_properties: &Vec<(proc_macro2::Ident, syn::Type)>,
 ) -> proc_macro2::TokenStream {
     let mut no_initiated_fields = vec![];
 
@@ -17,12 +18,19 @@ pub fn generate_new_method(
         })
         .collect();
 
-    let func_params: Vec<proc_macro2::TokenStream> = no_initiated_fields
+    let mut func_params: Vec<proc_macro2::TokenStream> = no_initiated_fields
         .iter()
         .map(|(ident, ty)| {
             quote! { #ident: #ty }
         })
         .collect();
+    let temp_params: Vec<proc_macro2::TokenStream> = temp_properties
+        .iter()
+        .map(|(ident, ty)| {
+            quote! { #ident: #ty }
+        })
+        .collect();
+    func_params.extend(temp_params);
 
     quote! {
         pub fn new(#(#func_params),*) -> Self {

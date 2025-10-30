@@ -22,7 +22,10 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
         .border_color(rgb(0x0000ff))
         .text_xl()
         .text_color(rgb(0xffffff))
-        .child(format!("Hello, {}!\nAnd hello {} too!", &self.text, &self.text2))
+        .child(format!(
+            "Hello, {}!\nAnd hello {} too!",
+            &self.text, &self.text2
+        ))
         .child(
             div()
                 .flex()
