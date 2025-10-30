@@ -52,8 +52,8 @@ pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
     if let Stmt::Macro(mac_stmt) = stmt {
         let mac = &mac_stmt.mac;
         if mac.path.is_ident("subscribe") {
-            use syn::parse::{Parse, ParseStream, Result};
             use syn::Token;
+            use syn::parse::{Parse, ParseStream, Result};
 
             struct Subscribe {
                 ident: Ident,

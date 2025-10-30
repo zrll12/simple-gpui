@@ -1,5 +1,5 @@
-mod methods;
 mod extractors;
+mod methods;
 
 use crate::extractors::{extract_component_property, extract_subscribe, extract_uses};
 use case::CaseExt;
@@ -31,12 +31,12 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
             if context {
                 temp_properties.push((
                     format_ident!("cx"),
-                    syn::parse_str("&mut Context<Self>").unwrap()
+                    syn::parse_str("&mut Context<Self>").unwrap(),
                 ));
             } else if window {
                 temp_properties.push((
                     format_ident!("window"),
-                    syn::parse_str("&mut Window").unwrap()
+                    syn::parse_str("&mut Window").unwrap(),
                 ));
             } else {
                 eprintln!("Adding component");
