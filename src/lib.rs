@@ -20,3 +20,10 @@ macro_rules! with_window {
         unreachable!("use_window! should only be used inside a #[component] function, and in ident: type = expr or ident: type form");
     };
 }
+
+#[macro_export]
+macro_rules! subscribe {
+    ($($t:tt)*) => {
+        unreachable!("subscribe! should only be used inside a #[component] function, and in ident: type = expr or ident: type form");
+    };
+}

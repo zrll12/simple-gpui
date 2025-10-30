@@ -1,7 +1,7 @@
 mod methods;
-mod property;
+mod extractors;
 
-use crate::property::{extract_component_property, extract_uses};
+use crate::extractors::{extract_component_property, extract_subscribe, extract_uses};
 use case::CaseExt;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -19,20 +19,21 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut properties: Vec<(Ident, syn::Type, Option<Expr>)> = Vec::new();
     let mut temp_properties: Vec<(Ident, syn::Type)> = Vec::new();
     let mut new_stmts: Vec<Stmt> = Vec::new();
+    let mut subscribes: Vec<(Ident, Expr)> = Vec::new();
 
     for stmt in &func.block.stmts {
         if let Some((ident, ty, init_expr)) = extract_component_property(stmt) {
             properties.push((ident.clone(), ty.clone(), init_expr.clone()));
+        } else if let Some((ident, expr)) = extract_subscribe(stmt) {
+            subscribes.push((ident.clone(), expr.clone()));
         } else {
             let (context, window) = extract_uses(stmt);
             if context {
-                eprintln!("Adding context property");
                 temp_properties.push((
                     format_ident!("cx"),
                     syn::parse_str("&mut Context<Self>").unwrap()
                 ));
             } else if window {
-                eprintln!("Adding window property");
                 temp_properties.push((
                     format_ident!("window"),
                     syn::parse_str("&mut Window").unwrap()
@@ -45,17 +46,20 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     // Build tokens for struct properties in fields
-    let field_defs: Vec<proc_macro2::TokenStream> = properties
+    let mut field_defs: Vec<proc_macro2::TokenStream> = properties
         .iter()
         .map(|(ident, ty, _init)| {
             quote! {
-                pub #ident: #ty
+                #ident: #ty
             }
         })
         .collect();
+    if subscribes.len() > 0 {
+        field_defs.push(quote! { _subscriptions: Vec<Subscription> })
+    }
 
     // Generate methods
-    let function_new = methods::generate_new_method(&properties, &temp_properties);
+    let function_new = methods::generate_new_method(&properties, &temp_properties, &subscribes);
     let function_setters = methods::generate_set_method(&properties);
 
     let inputs = &func.sig.inputs;

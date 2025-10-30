@@ -1,22 +1,31 @@
 use quote::{format_ident, quote};
 
-// Generates an new methods, all fields without initializers will be required as parameters.
+// Generates a new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
     properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
     temp_properties: &Vec<(proc_macro2::Ident, syn::Type)>,
+    subscribes: &Vec<(proc_macro2::Ident, syn::Expr)>,
 ) -> proc_macro2::TokenStream {
     let mut no_initiated_fields = vec![];
+    let mut initiated_fields = vec![];
 
-    let field_inits: Vec<proc_macro2::TokenStream> = properties
+    let mut field_inits: Vec<proc_macro2::TokenStream> = properties
         .iter()
-        .map(|(ident, ty, init)| match init {
-            Some(expr) => quote! { #ident: #expr },
-            None => {
-                no_initiated_fields.push((ident, ty));
-                quote! { #ident }
+        .map(|(ident, ty, init)| {
+            match init {
+                Some(expr) => {
+                    initiated_fields.push((ident, ty, expr));
+                }
+                None => {
+                    no_initiated_fields.push((ident, ty));
+                }
             }
+            quote! { #ident }
         })
         .collect();
+    if subscribes.len() > 0 {
+        field_inits.push(quote! { _subscriptions })
+    }
 
     let mut func_params: Vec<proc_macro2::TokenStream> = no_initiated_fields
         .iter()
@@ -32,8 +41,34 @@ pub fn generate_new_method(
         .collect();
     func_params.extend(temp_params);
 
+    let var_inits: Vec<proc_macro2::TokenStream> = initiated_fields
+        .iter()
+        .map(|(ident, ty, init)| {
+            quote! { let #ident: #ty = #init; }
+        })
+        .collect();
+
+    let subscribe_inits: Vec<proc_macro2::TokenStream> = subscribes
+        .iter()
+        .map(|(ident, expr)| {
+            quote! { cx.subscribe_in(&#ident, window, #expr) }
+        })
+        .collect();
+
+    let subscriptions_init = if subscribes.len() > 0 {
+        quote! {
+            let _subscriptions: Vec<Subscription> = vec![
+                #(#subscribe_inits),*
+            ];
+        }
+    } else {
+        quote! {}
+    };
+
     quote! {
         pub fn new(#(#func_params),*) -> Self {
+            #(#var_inits)*
+            #subscriptions_init
             Self {
                 #(#field_inits),*
             }
@@ -41,6 +76,7 @@ pub fn generate_new_method(
     }
 }
 
+// Generates setter methods for each property.
 pub fn generate_set_method(
     properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
 ) -> proc_macro2::TokenStream {

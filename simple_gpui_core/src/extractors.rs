@@ -45,6 +45,44 @@ pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Opti
     None
 }
 
+/// Extracts a subscribe like:
+///   subscribe!(state_ident, impl FnMut(&mut T, &Entity<Emitter>, &Evt, &mut Window, &mut Context<T>) + 'static);
+/// returns (ident, closure_expr)
+pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
+    if let Stmt::Macro(mac_stmt) = stmt {
+        let mac = &mac_stmt.mac;
+        if mac.path.is_ident("subscribe") {
+            use syn::parse::{Parse, ParseStream, Result};
+            use syn::Token;
+
+            struct Subscribe {
+                ident: Ident,
+                _comma: Token![,],
+                closure: Expr,
+            }
+
+            impl Parse for Subscribe {
+                fn parse(input: ParseStream) -> Result<Self> {
+                    let ident: Ident = input.parse()?;
+                    let _comma: Token![,] = input.parse()?;
+                    let closure: Expr = input.parse()?;
+                    Ok(Subscribe {
+                        ident,
+                        _comma,
+                        closure,
+                    })
+                }
+            }
+
+            let tokens = mac.tokens.clone();
+            if let Ok(sub) = syn::parse2::<Subscribe>(tokens) {
+                return Some((sub.ident, sub.closure));
+            }
+        }
+    }
+    None
+}
+
 /// Extracts a statement like:
 ///   with_context!();
 ///   with_window!();
