@@ -1,7 +1,7 @@
 mod extractors;
 mod methods;
 
-use crate::extractors::{extract_component_property, extract_subscribe, extract_uses};
+use crate::extractors::{extract_component_property, extract_subscribe, extract_with_context};
 use case::CaseExt;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -20,6 +20,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut temp_properties: Vec<(Ident, syn::Type)> = Vec::new();
     let mut new_stmts: Vec<Stmt> = Vec::new();
     let mut subscribes: Vec<(Ident, Expr)> = Vec::new();
+    let mut with_context_used = false;
 
     for stmt in &func.block.stmts {
         if let Some((ident, ty, init_expr)) = extract_component_property(stmt) {
@@ -27,19 +28,10 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         } else if let Some((ident, expr)) = extract_subscribe(stmt) {
             subscribes.push((ident.clone(), expr.clone()));
         } else {
-            let (context, window) = extract_uses(stmt);
+            let context = extract_with_context(stmt);
             if context {
-                temp_properties.push((
-                    format_ident!("cx"),
-                    syn::parse_str("&mut Context<Self>").unwrap(),
-                ));
-            } else if window {
-                temp_properties.push((
-                    format_ident!("window"),
-                    syn::parse_str("&mut Window").unwrap(),
-                ));
+                with_context_used = true;
             } else {
-                eprintln!("Adding component");
                 new_stmts.push(stmt.clone());
             }
         }
@@ -54,12 +46,13 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
             }
         })
         .collect();
+
     if subscribes.len() > 0 {
         field_defs.push(quote! { _subscriptions: Vec<Subscription> })
     }
 
     // Generate methods
-    let function_new = methods::generate_new_method(&properties, &temp_properties, &subscribes);
+    let function_new = methods::generate_new_method(&properties, &temp_properties, &subscribes, with_context_used);
     let function_setters = methods::generate_set_method(&properties);
 
     let inputs = &func.sig.inputs;

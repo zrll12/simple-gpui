@@ -6,8 +6,7 @@ use simple_gpui_core::component;
 #[component]
 // Window and cx here are not the same as in the property definition. Maybe you can rename them?
 fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-    with_context!();
-    with_window!();
+    init_with_context!();
     component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).placeholder("Enter your name")));
     component_property!(text: SharedString = SharedString::new("World"));
     subscribe!(input_state, {
@@ -16,7 +15,7 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
         move |this, _, ev: &InputEvent, _window, cx| match ev {
             InputEvent::Change => {
                 let value = input_state.read(cx).value();
-                this.text = format!("Hello, {}!", value).into();
+                this.text = value.clone();
                 cx.notify()
             }
             _ => {}

@@ -84,17 +84,14 @@ pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
 }
 
 /// Extracts a statement like:
-///   with_context!();
-///   with_window!();
-/// returns (use_context, use_window)
-pub fn extract_uses(stmt: &Stmt) -> (bool, bool) {
+///   with_context_in_init!();
+/// returns true if found
+pub fn extract_with_context(stmt: &Stmt) -> bool {
     if let Stmt::Macro(mac_stmt) = stmt {
         let mac = &mac_stmt.mac;
-        if mac.path.is_ident("with_context") {
-            return (true, false);
-        } else if mac.path.is_ident("with_window") {
-            return (false, true);
+        if mac.path.is_ident("init_with_context") {
+            return true;
         }
     }
-    (false, false)
+    false
 }

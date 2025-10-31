@@ -5,6 +5,7 @@ pub fn generate_new_method(
     properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
     temp_properties: &Vec<(proc_macro2::Ident, syn::Type)>,
     subscribes: &Vec<(proc_macro2::Ident, syn::Expr)>,
+    with_context: bool,
 ) -> proc_macro2::TokenStream {
     let mut no_initiated_fields = vec![];
     let mut initiated_fields = vec![];
@@ -40,6 +41,10 @@ pub fn generate_new_method(
         })
         .collect();
     func_params.extend(temp_params);
+    if subscribes.len() > 0 && with_context {
+        func_params.push(quote! { cx: &mut Context<Self> });
+        func_params.push(quote! { window: &mut Window });
+    }
 
     let var_inits: Vec<proc_macro2::TokenStream> = initiated_fields
         .iter()

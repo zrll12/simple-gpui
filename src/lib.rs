@@ -8,16 +8,9 @@ macro_rules! component_property {
 }
 
 #[macro_export]
-macro_rules! with_context {
+macro_rules! init_with_context {
     ($($t:tt)*) => {
         unreachable!("use_context! should only be used inside a #[component] function, and in ident: type = expr or ident: type form");
-    };
-}
-
-#[macro_export]
-macro_rules! with_window {
-    ($($t:tt)*) => {
-        unreachable!("use_window! should only be used inside a #[component] function, and in ident: type = expr or ident: type form");
     };
 }
 
