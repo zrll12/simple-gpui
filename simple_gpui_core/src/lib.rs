@@ -6,7 +6,7 @@ use case::CaseExt;
 use proc_macro::TokenStream;
 use std::collections::HashMap;
 use quote::{format_ident, quote};
-use syn::{Expr, Ident, ItemFn, Stmt, parse_macro_input};
+use syn::{Expr, Ident, ItemFn, Stmt, parse_macro_input, parse_quote};
 
 /// attribute proc macro
 #[proc_macro_attribute]
@@ -20,29 +20,31 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut properties: HashMap<Ident, (syn::Type, Option<Expr>)> = HashMap::new();
     let mut new_stmts: Vec<Stmt> = Vec::new();
     let mut subscribes: Vec<(Ident, Expr)> = Vec::new();
-    let mut with_context_used = false;
 
     for stmt in &func.block.stmts {
         if let Some((ident, ty, init_expr)) = extract_component_property(stmt) {
             properties.insert(ident.clone(), (ty.clone(), init_expr.clone()));
         } else if let Some((ident, expr)) = extract_subscribe(stmt) {
             subscribes.push((ident.clone(), expr.clone()));
+        } else if extract_with_context(stmt) {
+            properties.insert(format_ident!("cx"), (parse_quote!(&mut Context<Self>), None));
+            properties.insert(format_ident!("window"), (parse_quote!(&mut Window), None));
         } else {
-            let context = extract_with_context(stmt);
-            if context {
-                with_context_used = true;
-            } else {
-                new_stmts.push(stmt.clone());
-            }
+            new_stmts.push(stmt.clone());
         }
     }
 
     // Build tokens for struct properties in fields
     let mut field_defs: Vec<proc_macro2::TokenStream> = properties
         .iter()
-        .map(|(ident, (ty, _init))| {
-            quote! {
-                #ident: #ty
+        .filter_map(|(ident, (ty, _init))| {
+            let is_runtime_param = ident == "cx" || ident == "window";
+            if is_runtime_param {
+                None
+            } else {
+                Some(quote! {
+                    #ident: #ty
+                })
             }
         })
         .collect();
@@ -52,7 +54,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     // Generate methods
-    let function_new = methods::generate_new_method(&properties, &subscribes, with_context_used);
+    let function_new = methods::generate_new_method(&properties, &subscribes);
     let function_setters = methods::generate_set_method(&properties);
 
     let inputs = &func.sig.inputs;

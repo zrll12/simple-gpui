@@ -1,18 +1,25 @@
 use quote::{format_ident, quote};
 use std::collections::HashMap;
 
+fn is_runtime_context_param(ident: &proc_macro2::Ident) -> bool {
+    let name = ident.to_string();
+    name == "cx" || name == "window"
+}
+
 // Generates a new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
     properties: &HashMap<proc_macro2::Ident, (syn::Type, Option<syn::Expr>)>,
     subscribes: &Vec<(proc_macro2::Ident, syn::Expr)>,
-    with_context: bool,
 ) -> proc_macro2::TokenStream {
     let mut no_initiated_fields = vec![];
     let mut initiated_fields = vec![];
 
     let mut field_inits: Vec<proc_macro2::TokenStream> = properties
         .iter()
-        .map(|(ident, (ty, init))| {
+        .filter_map(|(ident, (ty, init))| {
+            if is_runtime_context_param(ident) {
+                return None;
+            }
             match init {
                 Some(expr) => {
                     initiated_fields.push((ident, ty, expr));
@@ -21,7 +28,7 @@ pub fn generate_new_method(
                     no_initiated_fields.push((ident, ty));
                 }
             }
-            quote! { #ident }
+            Some(quote! { #ident })
         })
         .collect();
     if subscribes.len() > 0 {
@@ -34,10 +41,14 @@ pub fn generate_new_method(
             quote! { #ident: #ty }
         })
         .collect();
-    if subscribes.len() > 0 && with_context {
-        func_params.push(quote! { cx: &mut Context<Self> });
-        func_params.push(quote! { window: &mut Window });
-    }
+    let context_params = properties
+        .iter()
+        .filter(|(ident, (_ty, _init))| is_runtime_context_param(ident))
+        .map(|(ident, (ty, _init))| {
+            quote! { #ident: #ty }
+        })
+        .collect::<Vec<_>>();
+    func_params.extend(context_params);
 
     let var_inits: Vec<proc_macro2::TokenStream> = initiated_fields
         .iter()
@@ -86,14 +97,17 @@ pub fn generate_set_method(
 ) -> proc_macro2::TokenStream {
     let functions = properties
         .iter()
-        .map(|(ident, (ty, _init))| {
+        .filter_map(|(ident, (ty, _init))| {
+            if is_runtime_context_param(ident) {
+                return None;
+            }
             let method_name = format_ident!("{}", ident);
-            quote! {
+            Some(quote! {
                 pub fn #method_name(mut self, value: #ty) -> Self {
                     self.#ident = value;
                     self
                 }
-            }
+            })
         })
         .collect::<Vec<_>>();
     quote! {
