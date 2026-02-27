@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 description = "Core library for simple-gpui, providing procedural macros and utilities for building GUI components."
 license = "MIT"
+documentation = "https://docs.rs/simple_gpui_core"
+homepage = "https://github.com/zrll12/simple-gpui"
+repository = "https://github.com/zrll12/simple-gpui"
 
 [dependencies]
 quote = "1.0.44"
