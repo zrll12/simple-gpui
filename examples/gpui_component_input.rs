@@ -1,5 +1,5 @@
 use gpui::*;
-use gpui_component::input::{InputEvent, InputState, TextInput};
+use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::*;
 use simple_gpui_core::component;
 
@@ -24,7 +24,7 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
         .size_full()
         .items_center()
         .justify_center()
-        .child(TextInput::new(&self.input_state))
+        .child(Input::new(&self.input_state))
         .child(format!("Hello, {}!", &self.text))
 }
 
@@ -44,7 +44,7 @@ fn main() {
             cx.open_window(window_options, |window, cx| {
                 let view = cx.new(|cx| HelloWorld::new(cx, window));
                 // This first level on the window, should be a Root.
-                cx.new(|cx| Root::new(view.into(), window, cx))
+                cx.new(|cx| Root::new(view, window, cx))
             })
             .unwrap();
 

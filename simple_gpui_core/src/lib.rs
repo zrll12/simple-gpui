@@ -4,9 +4,26 @@ mod methods;
 use crate::extractors::{extract_component_property, extract_subscribe, extract_with_context};
 use case::CaseExt;
 use proc_macro::TokenStream;
-use std::collections::HashMap;
 use quote::{format_ident, quote};
 use syn::{Expr, Ident, ItemFn, Stmt, parse_macro_input, parse_quote};
+
+fn upsert_property(
+    properties: &mut Vec<(Ident, syn::Type, Option<Expr>)>,
+    ident: Ident,
+    ty: syn::Type,
+    init: Option<Expr>,
+) -> Result<(), TokenStream> {
+    if let Some(_) = properties.iter_mut().find(|(name, _, _)| *name == ident) {
+        Err(
+            syn::Error::new(ident.span(), format!("Property {} already exists", ident))
+                .into_compile_error()
+                .into(),
+        )
+    } else {
+        properties.push((ident, ty, init));
+        Ok(())
+    }
+}
 
 /// attribute proc macro
 #[proc_macro_attribute]
@@ -17,18 +34,34 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let struct_name = format_ident!("{}", fn_name.to_string().to_camel());
 
     // Collect properties and build new statements for the body
-    let mut properties: HashMap<Ident, (syn::Type, Option<Expr>)> = HashMap::new();
+    let mut properties: Vec<(Ident, syn::Type, Option<Expr>)> = Vec::new();
     let mut new_stmts: Vec<Stmt> = Vec::new();
     let mut subscribes: Vec<(Ident, Expr)> = Vec::new();
 
     for stmt in &func.block.stmts {
         if let Some((ident, ty, init_expr)) = extract_component_property(stmt) {
-            properties.insert(ident.clone(), (ty.clone(), init_expr.clone()));
+            if let Err(err) = upsert_property(&mut properties, ident, ty, init_expr) {
+                return err;
+            }
         } else if let Some((ident, expr)) = extract_subscribe(stmt) {
             subscribes.push((ident.clone(), expr.clone()));
         } else if extract_with_context(stmt) {
-            properties.insert(format_ident!("cx"), (parse_quote!(&mut Context<Self>), None));
-            properties.insert(format_ident!("window"), (parse_quote!(&mut Window), None));
+            if let Err(err) = upsert_property(
+                &mut properties,
+                format_ident!("cx"),
+                parse_quote!(&mut Context<Self>),
+                None,
+            ) {
+                return err;
+            }
+            if let Err(err) = upsert_property(
+                &mut properties,
+                format_ident!("window"),
+                parse_quote!(&mut Window),
+                None,
+            ) {
+                return err;
+            }
         } else {
             new_stmts.push(stmt.clone());
         }
@@ -37,7 +70,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     // Build tokens for struct properties in fields
     let mut field_defs: Vec<proc_macro2::TokenStream> = properties
         .iter()
-        .filter_map(|(ident, (ty, _init))| {
+        .filter_map(|(ident, ty, _init)| {
             let is_runtime_param = ident == "cx" || ident == "window";
             if is_runtime_param {
                 None

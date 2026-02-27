@@ -1,5 +1,5 @@
 use gpui::*;
-use gpui_component::input::{InputEvent, InputState, TextInput};
+use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::tab::{Tab, TabBar};
 use gpui_component::*;
 use simple_gpui_core::component;
@@ -56,11 +56,11 @@ fn calculator(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement
                             view.selected = *index;
                             cx.notify();
                         }))
-                        .child(Tab::new("°C"))
-                        .child(Tab::new("°F")),
+                        .child(Tab::new().label("°C"))
+                        .child(Tab::new().label("°F")),
                 ),
         )
-        .child(TextInput::new(&self.input_state))
+        .child(Input::new(&self.input_state))
         .child(format!("Celsius: {:.2} °C", get_celsius(self.input, self.selected)))
         .child(format!("Fahrenheit: {:.2} °F", get_fahrenheit(self.input, self.selected)))
 }
@@ -79,7 +79,7 @@ fn main() {
         cx.spawn(async move |cx| {
             cx.open_window(window_options, |window, cx| {
                 let view = cx.new(|cx| Calculator::new(cx, window));
-                cx.new(|cx| Root::new(view.into(), window, cx))
+                cx.new(|cx| Root::new(view, window, cx))
             })
             .unwrap();
 

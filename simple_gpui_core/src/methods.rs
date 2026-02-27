@@ -1,5 +1,4 @@
 use quote::{format_ident, quote};
-use std::collections::HashMap;
 
 fn is_runtime_context_param(ident: &proc_macro2::Ident) -> bool {
     let name = ident.to_string();
@@ -8,15 +7,15 @@ fn is_runtime_context_param(ident: &proc_macro2::Ident) -> bool {
 
 // Generates a new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
-    properties: &HashMap<proc_macro2::Ident, (syn::Type, Option<syn::Expr>)>,
-    subscribes: &Vec<(proc_macro2::Ident, syn::Expr)>,
+    properties: &[(proc_macro2::Ident, syn::Type, Option<syn::Expr>)],
+    subscribes: &[(proc_macro2::Ident, syn::Expr)],
 ) -> proc_macro2::TokenStream {
     let mut no_initiated_fields = vec![];
     let mut initiated_fields = vec![];
 
     let mut field_inits: Vec<proc_macro2::TokenStream> = properties
         .iter()
-        .filter_map(|(ident, (ty, init))| {
+        .filter_map(|(ident, ty, init)| {
             if is_runtime_context_param(ident) {
                 return None;
             }
@@ -43,8 +42,8 @@ pub fn generate_new_method(
         .collect();
     let context_params = properties
         .iter()
-        .filter(|(ident, (_ty, _init))| is_runtime_context_param(ident))
-        .map(|(ident, (ty, _init))| {
+        .filter(|(ident, _ty, _init)| is_runtime_context_param(ident))
+        .map(|(ident, ty, _init)| {
             quote! { #ident: #ty }
         })
         .collect::<Vec<_>>();
@@ -70,7 +69,7 @@ pub fn generate_new_method(
         })
         .collect();
 
-    let subscriptions_init = if subscribes.len() > 0 {
+    let subscriptions_init = if !subscribes.is_empty() {
         quote! {
             let _subscriptions: Vec<Subscription> = vec![
                 #(#subscribe_inits),*
@@ -93,11 +92,11 @@ pub fn generate_new_method(
 
 // Generates setter methods for each property.
 pub fn generate_set_method(
-    properties: &HashMap<proc_macro2::Ident, (syn::Type, Option<syn::Expr>)>,
+    properties: &[(proc_macro2::Ident, syn::Type, Option<syn::Expr>)],
 ) -> proc_macro2::TokenStream {
     let functions = properties
         .iter()
-        .filter_map(|(ident, (ty, _init))| {
+        .filter_map(|(ident, ty, _init)| {
             if is_runtime_context_param(ident) {
                 return None;
             }
