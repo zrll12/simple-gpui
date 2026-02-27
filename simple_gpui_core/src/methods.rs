@@ -1,9 +1,9 @@
 use quote::{format_ident, quote};
+use std::collections::HashMap;
 
 // Generates a new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
-    properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
-    temp_properties: &Vec<(proc_macro2::Ident, syn::Type)>,
+    properties: &HashMap<proc_macro2::Ident, (syn::Type, Option<syn::Expr>)>,
     subscribes: &Vec<(proc_macro2::Ident, syn::Expr)>,
     with_context: bool,
 ) -> proc_macro2::TokenStream {
@@ -12,7 +12,7 @@ pub fn generate_new_method(
 
     let mut field_inits: Vec<proc_macro2::TokenStream> = properties
         .iter()
-        .map(|(ident, ty, init)| {
+        .map(|(ident, (ty, init))| {
             match init {
                 Some(expr) => {
                     initiated_fields.push((ident, ty, expr));
@@ -34,13 +34,6 @@ pub fn generate_new_method(
             quote! { #ident: #ty }
         })
         .collect();
-    let temp_params: Vec<proc_macro2::TokenStream> = temp_properties
-        .iter()
-        .map(|(ident, ty)| {
-            quote! { #ident: #ty }
-        })
-        .collect();
-    func_params.extend(temp_params);
     if subscribes.len() > 0 && with_context {
         func_params.push(quote! { cx: &mut Context<Self> });
         func_params.push(quote! { window: &mut Window });
@@ -83,11 +76,11 @@ pub fn generate_new_method(
 
 // Generates setter methods for each property.
 pub fn generate_set_method(
-    properties: &Vec<(proc_macro2::Ident, syn::Type, Option<syn::Expr>)>,
+    properties: &HashMap<proc_macro2::Ident, (syn::Type, Option<syn::Expr>)>,
 ) -> proc_macro2::TokenStream {
     let functions = properties
         .iter()
-        .map(|(ident, ty, _init)| {
+        .map(|(ident, (ty, _init))| {
             let method_name = format_ident!("{}", ident);
             quote! {
                 pub fn #method_name(mut self, value: #ty) -> Self {
