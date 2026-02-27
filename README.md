@@ -121,14 +121,14 @@ The repository includes several examples:
 
 1. **hello_world.rs** - Basic component with properties
 2. **gpui_component_input.rs** - Input handling with event subscriptions
-3. **temperature_caculator.rs** - Temperature converter with tabs and input validation
+3. **temperature_calculator.rs** - Temperature converter with tabs and input validation
 
 Run examples with:
 
 ```bash
 cargo run --example hello_world
 cargo run --example gpui_component_input
-cargo run --example temperature_caculator
+cargo run --example temperature_calculator
 ```
 
 ### Project Structure

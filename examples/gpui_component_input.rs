@@ -4,7 +4,6 @@ use gpui_component::*;
 use simple_gpui_core::component;
 
 #[component]
-// Window and cx here are not the same as in the property definition. Maybe you can rename them?
 fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
     init_with_context!();
     component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).placeholder("Enter your name")));

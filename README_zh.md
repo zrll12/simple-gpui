@@ -121,14 +121,14 @@ fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoEleme
 
 1. **hello_world.rs** - 带属性的基本组件
 2. **gpui_component_input.rs** - 带事件订阅的输入处理
-3. **temperature_caculator.rs** - 带标签和输入验证的温度转换器
+3. **temperature_calculator.rs** - 带标签和输入验证的温度转换器
 
 运行示例:
 
 ```bash
 cargo run --example hello_world
 cargo run --example gpui_component_input
-cargo run --example temperature_caculator
+cargo run --example temperature_calculator
 ```
 
 ### 项目结构

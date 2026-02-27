@@ -49,7 +49,7 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         })
         .collect();
 
-    if subscribes.len() > 0 {
+    if !subscribes.is_empty() {
         field_defs.push(quote! { _subscriptions: Vec<Subscription> })
     }
 

@@ -31,7 +31,7 @@ pub fn generate_new_method(
             Some(quote! { #ident })
         })
         .collect();
-    if subscribes.len() > 0 {
+    if !subscribes.is_empty() {
         field_inits.push(quote! { _subscriptions })
     }
 

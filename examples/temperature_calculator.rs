@@ -5,7 +5,7 @@ use gpui_component::*;
 use simple_gpui_core::component;
 
 #[component]
-fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+fn temperature_calculator(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
     init_with_context!();
     component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).validate(|s, _| s.parse::<f32>().is_ok())));
     component_property!(c: f32 = 0.);
@@ -50,7 +50,7 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
                                 view.f = view.c * 9. / 5. + 32.;
                             } else if *index == 1 { // C -> F
                                 view.f = view.c;
-                                view.c = view.f - 32. * 5. / 9.;
+                                view.c = (view.f - 32.) * 5. / 9.;
                             }
                             cx.notify();
                         }))
@@ -76,7 +76,7 @@ fn main() {
 
         cx.spawn(async move |cx| {
             cx.open_window(window_options, |window, cx| {
-                let view = cx.new(|cx| HelloWorld::new(cx, window));
+                let view = cx.new(|cx| TemperatureCalculator::new(cx, window));
                 cx.new(|cx| Root::new(view.into(), window, cx))
             })
             .unwrap();

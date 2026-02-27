@@ -9,7 +9,7 @@ macro_rules! component_property {
 #[macro_export]
 macro_rules! init_with_context {
     ($($t:tt)*) => {
-        unreachable!("use_context! should only be used inside a #[component] function, and in ident: type = expr or ident: type form");
+    unreachable!("init_with_context! should only be used inside a #[component] function");
     };
 }
 

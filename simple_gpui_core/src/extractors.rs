@@ -13,24 +13,24 @@ pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Opti
 
             struct Prop {
                 name: Ident,
-                colon_token: syn::token::Colon,
+                _colon_token: syn::token::Colon,
                 ty: syn::Type,
-                eq_token: Option<syn::token::Eq>,
+                _eq_token: Option<syn::token::Eq>,
                 init: Option<Expr>,
             }
 
             impl Parse for Prop {
                 fn parse(input: ParseStream) -> Result<Self> {
                     let name: Ident = input.parse()?;
-                    let colon_token: syn::token::Colon = input.parse()?;
+                    let _colon_token: syn::token::Colon = input.parse()?;
                     let ty: syn::Type = input.parse()?;
-                    let eq_token: Option<syn::token::Eq> = input.parse().ok();
+                    let _eq_token: Option<syn::token::Eq> = input.parse().ok();
                     let init: Option<Expr> = input.parse().ok();
                     Ok(Prop {
                         name,
-                        colon_token,
+                        _colon_token,
                         ty,
-                        eq_token,
+                        _eq_token,
                         init,
                     })
                 }
@@ -91,7 +91,7 @@ pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
 }
 
 /// Extracts a statement like:
-///   with_context_in_init!();
+///   init_with_context!();
 /// returns true if found
 pub fn extract_with_context(stmt: &Stmt) -> bool {
     if let Stmt::Macro(mac_stmt) = stmt {
