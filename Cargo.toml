@@ -2,6 +2,8 @@
 name = "simple-gpui"
 version = "0.1.0"
 edition = "2024"
+description = "A simple declarative API for gpui."
+license = "MIT"
 documentation = "https://docs.rs/simple-gpui"
 homepage = "https://github.com/zrll12/simple-gpui"
 repository = "https://github.com/zrll12/simple-gpui"
