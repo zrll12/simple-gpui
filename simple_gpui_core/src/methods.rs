@@ -49,7 +49,13 @@ pub fn generate_new_method(
     let subscribe_inits: Vec<proc_macro2::TokenStream> = subscribes
         .iter()
         .map(|(ident, expr)| {
-            quote! { cx.subscribe_in(&#ident, window, #expr) }
+            quote! {
+                {
+                    let __subscribe_target = #ident.clone();
+                    let #ident = __subscribe_target.clone();
+                    cx.subscribe_in(&__subscribe_target, window, #expr)
+                }
+            }
         })
         .collect();
 

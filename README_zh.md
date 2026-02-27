@@ -84,16 +84,13 @@ fn input_example(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElem
     component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx)));
     component_property!(text: SharedString = SharedString::new(""));
     
-    subscribe!(input_state, {
-        let input_state = input_state.clone();
-        move |this, _, ev: &InputEvent, _window, cx| {
-            match ev {
-                InputEvent::Change => {
-                    this.text = input_state.read(cx).value();
-                    cx.notify()
-                }
-                _ => {}
+    subscribe!(input_state, |this, _, ev: &InputEvent, _window, cx| {
+        match ev {
+            InputEvent::Change => {
+                this.text = input_state.read(cx).value();
+                cx.notify()
             }
+            _ => {}
         }
     });
     

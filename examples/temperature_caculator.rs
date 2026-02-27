@@ -11,24 +11,21 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
     component_property!(c: f32 = 0.);
     component_property!(f: f32 = 32.);
     component_property!(selected: usize = 0);
-    subscribe!(input_state, {
-        let input_state = input_state.clone();
-        move |this, _, ev: &InputEvent, _window, cx| match ev {
-            InputEvent::Change => {
-                let value = input_state.read(cx).value();
-                if let Ok(c) = value.parse::<f32>() {
-                    if this.selected == 0 {
-                        this.c = c;
-                        this.f = (c * 9. / 5.) + 32.;
-                    } else if this.selected == 1 {
-                        this.f = c;
-                        this.c = (c - 32.) * 5. / 9.;
-                    }
-                    cx.notify()
+    subscribe!(input_state, |view, _state, event, _window, cx| match event {
+        InputEvent::Change => {
+            let value = input_state.read(cx).value();
+            if let Ok(c) = value.parse::<f32>() {
+                if view.selected == 0 {
+                    view.c = c;
+                    view.f = (c * 9. / 5.) + 32.;
+                } else if view.selected == 1 {
+                    view.f = c;
+                    view.c = (c - 32.) * 5. / 9.;
                 }
+                cx.notify()
             }
-            _ => {}
         }
+        _ => {}
     });
 
     v_flex()

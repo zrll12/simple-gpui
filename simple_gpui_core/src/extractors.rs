@@ -75,7 +75,14 @@ pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
             }
 
             let tokens = mac.tokens.clone();
-            if let Ok(sub) = syn::parse2::<Subscribe>(tokens) {
+            if let Ok(mut sub) = syn::parse2::<Subscribe>(tokens) {
+                if let Expr::Closure(ref mut closure) = sub.closure {
+                    if closure.capture.is_none() {
+                        closure.capture = Some(syn::token::Move {
+                            span: proc_macro2::Span::call_site(),
+                        });
+                    }
+                }
                 return Some((sub.ident, sub.closure));
             }
         }
