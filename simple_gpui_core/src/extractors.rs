@@ -13,9 +13,9 @@ pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Opti
 
             struct Prop {
                 name: Ident,
-                colon_token: syn::token::Colon,
+                _colon_token: syn::token::Colon,
                 ty: syn::Type,
-                eq_token: Option<syn::token::Eq>,
+                _eq_token: Option<syn::token::Eq>,
                 init: Option<Expr>,
             }
 
@@ -28,9 +28,9 @@ pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Opti
                     let init: Option<Expr> = input.parse().ok();
                     Ok(Prop {
                         name,
-                        colon_token,
+                        _colon_token: colon_token,
                         ty,
-                        eq_token,
+                        _eq_token: eq_token,
                         init,
                     })
                 }

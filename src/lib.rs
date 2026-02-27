@@ -1,3 +1,5 @@
+pub use simple_gpui_core::*;
+
 // This macro is not necessarily used, only for dismissing ide errors.
 #[macro_export]
 macro_rules! component_property {

@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+simple_gpui_core = { version="0.1.0", path = "./simple_gpui_core" }
+
+[dev-dependencies]
 gpui = "0.2.2"
-gpui-component = "0.3.1"
-simple_gpui_core = { path = "./simple_gpui_core" }
+gpui-component = "0.5.1"
