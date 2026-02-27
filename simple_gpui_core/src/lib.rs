@@ -13,7 +13,7 @@ fn upsert_property(
     ty: syn::Type,
     init: Option<Expr>,
 ) -> Result<(), TokenStream> {
-    if let Some(_) = properties.iter_mut().find(|(name, _, _)| *name == ident) {
+    if properties.iter().any(|(name, _, _)| name == &ident) {
         Err(
             syn::Error::new(ident.span(), format!("Property {} already exists", ident))
                 .into_compile_error()
@@ -46,21 +46,13 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
         } else if let Some((ident, expr)) = extract_subscribe(stmt) {
             subscribes.push((ident.clone(), expr.clone()));
         } else if extract_with_context(stmt) {
-            if let Err(err) = upsert_property(
-                &mut properties,
-                format_ident!("cx"),
-                parse_quote!(&mut Context<Self>),
-                None,
-            ) {
-                return err;
-            }
-            if let Err(err) = upsert_property(
-                &mut properties,
-                format_ident!("window"),
-                parse_quote!(&mut Window),
-                None,
-            ) {
-                return err;
+            for (ident, ty) in [
+                (format_ident!("cx"), parse_quote!(&mut Context<Self>)),
+                (format_ident!("window"), parse_quote!(&mut Window)),
+            ] {
+                if let Err(err) = upsert_property(&mut properties, ident, ty, None) {
+                    return err;
+                }
             }
         } else {
             new_stmts.push(stmt.clone());
