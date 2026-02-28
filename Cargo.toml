@@ -12,5 +12,7 @@ repository = "https://github.com/zrll12/simple-gpui"
 simple_gpui_core = { version="0.1.0", path = "./simple_gpui_core" }
 
 [dev-dependencies]
+# These dependencies are only used for examples.
 gpui = "0.2.2"
 gpui-component = "0.5.1"
+rfd = "0.17.2"
