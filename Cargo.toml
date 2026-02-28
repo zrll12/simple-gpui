@@ -1,6 +1,6 @@
 [package]
 name = "simple-gpui"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "A simple declarative API for gpui."
 license = "MIT"
@@ -9,7 +9,7 @@ homepage = "https://github.com/zrll12/simple-gpui"
 repository = "https://github.com/zrll12/simple-gpui"
 
 [dependencies]
-simple_gpui_core = { version="0.1.0", path = "./simple_gpui_core" }
+simple_gpui_core = { version="0.2.0", path = "./simple_gpui_core" }
 
 [dev-dependencies]
 # These dependencies are only used for examples.
