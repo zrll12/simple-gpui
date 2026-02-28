@@ -45,7 +45,7 @@ pub(crate) fn collect_component_body(
             if matches!(mode, ParseMode::Stateless) {
                 return Err(syn::Error::new_spanned(
                     stmt,
-                    "observe! is not supported in #[component_stateless], use #[component] instead",
+                    "observe! is not supported in #[component_stateless]. Please migrate this component to #[component] and then use observe!.",
                 )
                 .into_compile_error()
                 .into());
@@ -67,7 +67,7 @@ pub(crate) fn collect_component_body(
             if matches!(mode, ParseMode::Stateless) {
                 return Err(syn::Error::new_spanned(
                     stmt,
-                    "subscribe! is not supported in #[component_stateless], use #[component] instead",
+                    "subscribe! is not supported in #[component_stateless]. Please migrate this component to #[component] and then use subscribe!.",
                 )
                 .into_compile_error()
                 .into());

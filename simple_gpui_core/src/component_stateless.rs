@@ -3,7 +3,7 @@ use crate::methods;
 use case::CaseExt;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{FnArg, ItemFn, Type, parse_macro_input};
+use syn::{ItemFn, parse_macro_input};
 
 pub(crate) fn component_stateless_impl(item: TokenStream) -> TokenStream {
     let func = parse_macro_input!(item as ItemFn);
