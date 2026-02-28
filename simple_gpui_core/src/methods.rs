@@ -5,6 +5,10 @@ fn is_runtime_context_param(ident: &proc_macro2::Ident) -> bool {
     name == "cx" || name == "window"
 }
 
+fn is_observe_property(ident: &proc_macro2::Ident) -> bool {
+    ident.to_string().starts_with("_ob_")
+}
+
 // Generates a new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
     properties: &[(proc_macro2::Ident, syn::Type, Option<syn::Expr>)],
@@ -98,6 +102,9 @@ pub fn generate_set_method(
         .iter()
         .filter_map(|(ident, ty, _init)| {
             if is_runtime_context_param(ident) {
+                return None;
+            }
+            if is_observe_property(ident) {
                 return None;
             }
             let method_name = format_ident!("{}", ident);

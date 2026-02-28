@@ -1,11 +1,29 @@
 use proc_macro2::Ident;
 use syn::{Expr, Stmt};
 
+const RESERVED_COMPONENT_PROPERTY_PREFIXES: &[&str] = &["ob"];
+
+fn get_reserved_component_property_prefix(ident: &Ident) -> Option<String> {
+    let name = ident.to_string();
+    RESERVED_COMPONENT_PROPERTY_PREFIXES
+        .iter()
+        .find_map(|prefix| {
+            let resolved_prefix = format!("_{}_", prefix);
+            if name.starts_with(&resolved_prefix) {
+                Some(resolved_prefix)
+            } else {
+                None
+            }
+        })
+}
+
 /// Extracts a statement like:
 ///   component_property!(name: Type = expr);
 ///   component_property!(name: Type);
 /// returns (ident, ty, expr)
-pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Option<Expr>)> {
+pub fn extract_component_property(
+    stmt: &Stmt,
+) -> Result<Option<(Ident, syn::Type, Option<Expr>)>, syn::Error> {
     if let Stmt::Macro(mac_stmt) = stmt {
         let mac = &mac_stmt.mac;
         if mac.path.is_ident("component_property") {
@@ -38,11 +56,21 @@ pub fn extract_component_property(stmt: &Stmt) -> Option<(Ident, syn::Type, Opti
 
             let tokens = mac.tokens.clone();
             if let Ok(prop) = syn::parse2::<Prop>(tokens) {
-                return Some((prop.name, prop.ty, prop.init));
+                if let Some(reserved_prefix) = get_reserved_component_property_prefix(&prop.name)
+                {
+                    return Err(syn::Error::new(
+                        prop.name.span(),
+                        format!(
+                            "`{}` prefix is reserved for observe-generated properties",
+                            reserved_prefix
+                        ),
+                    ));
+                }
+                return Ok(Some((prop.name, prop.ty, prop.init)));
             }
         }
     }
-    None
+    Ok(None)
 }
 
 /// Extracts a subscribe like:

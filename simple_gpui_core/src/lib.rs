@@ -42,11 +42,20 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut observe_index: usize = 0;
 
     for stmt in &func.block.stmts {
-        if let Some((ident, ty, init_expr)) = extract_component_property(stmt) {
-            if let Err(err) = upsert_property(&mut properties, ident, ty, init_expr) {
-                return err;
+        match extract_component_property(stmt) {
+            Ok(Some((ident, ty, init_expr))) => {
+                if let Err(err) = upsert_property(&mut properties, ident, ty, init_expr) {
+                    return err;
+                }
+                continue;
             }
-        } else if let Some((state_ty, callback)) = extract_observe(stmt) {
+            Err(err) => {
+                return err.into_compile_error().into();
+            }
+            Ok(None) => {}
+        }
+
+        if let Some((state_ty, callback)) = extract_observe(stmt) {
             observe_index += 1;
             let ident = format_ident!("_ob_{}", observe_index);
             let ty: syn::Type = parse_quote!(Subscription);

@@ -74,6 +74,13 @@ fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoEleme
 }
 ```
 
+`component_property!` has reserved internal prefixes. Currently, names starting with `_ob_` are reserved for `observe!`-generated properties. Defining them manually will produce a compile-time error.
+
+```rust
+// ❌ compile error: `_ob_` prefix is reserved
+component_property!(_ob_custom: Subscription);
+```
+
 #### Event Subscriptions
 
 Subscribe to events from entities using the `subscribe!` macro:
@@ -130,6 +137,7 @@ fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
 
 `observe!` automatically expands to an internal `Subscription` component property.
 Generated names are incremental in declaration order within one component: `_ob_1`, `_ob_2`, ...
+So `_ob_` names are internal and should not be declared by `component_property!`.
 
 #### Context Access
 

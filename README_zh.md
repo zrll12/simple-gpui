@@ -74,6 +74,13 @@ fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoEleme
 }
 ```
 
+`component_property!` 存在内部保留前缀。当前以 `_ob_` 开头的名称保留给 `observe!` 自动生成的属性，手动声明会触发编译错误。
+
+```rust
+// ❌ 编译错误: `_ob_` 前缀是保留的
+component_property!(_ob_custom: Subscription);
+```
+
 #### 事件订阅
 
 使用 `subscribe!` 宏订阅实体的事件:
@@ -130,6 +137,7 @@ fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
 
 `observe!` 会自动展开为内部的 `Subscription` 组件属性。
 在同一个组件内按声明顺序自动命名为: `_ob_1`、`_ob_2` ...
+因此 `_ob_` 名称属于内部保留，不应通过 `component_property!` 手动定义。
 
 #### 上下文访问
 

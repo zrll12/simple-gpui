@@ -1,6 +1,7 @@
 use gpui::*;
 use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::*;
+use simple_gpui::component_property;
 use simple_gpui_core::component;
 
 #[component]
@@ -9,6 +10,7 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
     init_with_context!();
     component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).placeholder("Enter your name")));
     component_property!(text: SharedString = SharedString::new("World"));
+    component_property!(_ob_1: SharedString = SharedString::new("World"));
     subscribe!(input_state, |view, _state, event, _window, cx| match event {
         InputEvent::Change => {
             let value = input_state.read(cx).value();
