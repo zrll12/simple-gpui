@@ -9,6 +9,7 @@ Simple GPUI is a Rust library that provides a simplified component-based framewo
 ### Features
 
 - **Component Macro**: Simplify component creation with the `#[component]` attribute macro
+- **Stateless Component Macro**: Build `RenderOnce` components with `#[component_stateless]`
 - **Reactive Properties**: Define component properties with automatic getter/setter generation
 - **Event Subscriptions**: Easy event handling with the `subscribe!` macro
 - **Global State Observe**: Observe global state changes with the `observe!` macro
@@ -80,6 +81,24 @@ fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoEleme
 // ❌ compile error: `_ob_` prefix is reserved
 component_property!(_ob_custom: Subscription);
 ```
+
+#### Stateless Components
+
+Use `#[component_stateless]` to transform a function into a `RenderOnce` component and auto-derive `IntoElement`:
+
+```rust
+use gpui::*;
+use simple_gpui_core::component_stateless;
+
+#[component_stateless]
+fn badge(_window: &mut Window, _cx: &mut App) -> impl IntoElement {
+    component_property!(text: SharedString = "New".into());
+
+    div().child(self.text)
+}
+```
+
+`#[component_stateless]` is intended for reusable, stateless element components. It supports `component_property!`, but does not support `subscribe!`, `observe!`, or `init_with_context!`.
 
 #### Event Subscriptions
 

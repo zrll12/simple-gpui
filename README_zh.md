@@ -9,6 +9,7 @@ Simple GPUI 是一个 Rust 库,为构建 GPUI 应用程序提供了简化的基�
 ### 特性
 
 - **组件宏**:使用 `#[component]` 属性宏简化组件创建
+- **无状态组件宏**:使用 `#[component_stateless]` 构建 `RenderOnce` 组件
 - **响应式属性**:定义组件属性并自动生成 getter/setter 方法
 - **事件订阅**:使用 `subscribe!` 宏轻松处理事件
 - **全局状态观察**:使用 `observe!` 宏观察全局状态变化
@@ -80,6 +81,24 @@ fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoEleme
 // ❌ 编译错误: `_ob_` 前缀是保留的
 component_property!(_ob_custom: Subscription);
 ```
+
+#### 无状态组件
+
+使用 `#[component_stateless]` 可以把函数转换成 `RenderOnce` 组件，并自动 `derive IntoElement`:
+
+```rust
+use gpui::*;
+use simple_gpui_core::component_stateless;
+
+#[component_stateless]
+fn badge(_window: &mut Window, _cx: &mut App) -> impl IntoElement {
+    component_property!(text: SharedString = "New".into());
+
+    div().child(self.text)
+}
+```
+
+`#[component_stateless]` 适用于可复用的无状态元素组件。它支持 `component_property!`，但不支持 `subscribe!`、`observe!` 和 `init_with_context!`。
 
 #### 事件订阅
 
