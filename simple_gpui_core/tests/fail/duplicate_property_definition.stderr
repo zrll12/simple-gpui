@@ -1,0 +1,5 @@
+error: Property count already exists
+ --> tests/fail/duplicate_property_definition.rs:6:25
+  |
+6 |     component_property!(count: usize = 2);
+  |                         ^^^^^

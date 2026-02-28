@@ -1,0 +1,5 @@
+error: `_ob_` prefix is reserved for observe-generated properties
+ --> tests/fail/manual_ob_prefix_definition.rs:5:25
+  |
+5 |     component_property!(_ob_1: usize = 1);
+  |                         ^^^^^
