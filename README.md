@@ -11,6 +11,7 @@ Simple GPUI is a Rust library that provides a simplified component-based framewo
 - **Component Macro**: Simplify component creation with the `#[component]` attribute macro
 - **Reactive Properties**: Define component properties with automatic getter/setter generation
 - **Event Subscriptions**: Easy event handling with the `subscribe!` macro
+- **Global State Observe**: Observe global state changes with the `observe!` macro
 - **Context Management**: Simplified context access with `init_with_context!`
 - **Type-Safe**: Full Rust type safety with compile-time guarantees
 
@@ -100,6 +101,36 @@ fn input_example(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElem
 }
 ```
 
+#### Global State Observe
+
+Observe global state changes using the `observe!` macro:
+
+```rust
+#[derive(Default)]
+struct AppState {
+    content: SharedString,
+}
+impl Global for AppState {}
+
+#[component]
+fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    init_with_context!();
+    component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).multi_line(true)));
+
+    observe!(AppState, |this, window, cx| {
+        let app_state = cx.global::<AppState>();
+        let content = app_state.content.clone();
+        this.input_state.update(cx, |input, cx| input.set_value(content, window, cx));
+        cx.notify();
+    });
+
+    div().child(Input::new(&self.input_state))
+}
+```
+
+`observe!` automatically expands to an internal `Subscription` component property.
+Generated names are incremental in declaration order within one component: `_ob_1`, `_ob_2`, ...
+
 #### Context Access
 
 Use `init_with_context!()` when you need to access the window or context during property initialization:
@@ -121,14 +152,16 @@ The repository includes several examples:
 
 1. **hello_world.rs** - Basic component with properties
 2. **gpui_component_input.rs** - Input handling with event subscriptions
-3. **temperature_caculator.rs** - Temperature converter with tabs and input validation
+3. **temperature_calculator.rs** - Temperature converter with tabs and input validation
+4. **global_observe.rs** - Global state observe and reactive input update
 
 Run examples with:
 
 ```bash
 cargo run --example hello_world
 cargo run --example gpui_component_input
-cargo run --example temperature_caculator
+cargo run --example temperature_calculator
+cargo run --example global_observe
 ```
 
 ### Project Structure

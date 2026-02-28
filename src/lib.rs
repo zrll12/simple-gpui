@@ -18,6 +18,13 @@ macro_rules! init_with_context {
 #[macro_export]
 macro_rules! subscribe {
     ($($t:tt)*) => {
-        unreachable!("subscribe! should only be used inside a #[component] function, and in ident: type = expr or ident: type form");
+        unreachable!("subscribe! should only be used inside a #[component] function, and in subscribe!(ident, closure) form");
+    };
+}
+
+#[macro_export]
+macro_rules! observe {
+    ($($t:tt)*) => {
+        unreachable!("observe! should only be used inside a #[component] function, and in observe!(Type, |self, window, cx| {}) form");
     };
 }

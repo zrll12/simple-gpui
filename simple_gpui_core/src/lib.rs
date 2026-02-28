@@ -1,7 +1,9 @@
 mod extractors;
 mod methods;
 
-use crate::extractors::{extract_component_property, extract_subscribe, extract_with_context};
+use crate::extractors::{
+    extract_component_property, extract_observe, extract_subscribe, extract_with_context,
+};
 use case::CaseExt;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -37,10 +39,21 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut properties: Vec<(Ident, syn::Type, Option<Expr>)> = Vec::new();
     let mut new_stmts: Vec<Stmt> = Vec::new();
     let mut subscribes: Vec<(Ident, Expr)> = Vec::new();
+    let mut observe_index: usize = 0;
 
     for stmt in &func.block.stmts {
         if let Some((ident, ty, init_expr)) = extract_component_property(stmt) {
             if let Err(err) = upsert_property(&mut properties, ident, ty, init_expr) {
+                return err;
+            }
+        } else if let Some((state_ty, callback)) = extract_observe(stmt) {
+            observe_index += 1;
+            let ident = format_ident!("_ob_{}", observe_index);
+            let ty: syn::Type = parse_quote!(Subscription);
+            let init_expr: Expr = parse_quote!(
+                cx.observe_global_in::<#state_ty>(window, #callback)
+            );
+            if let Err(err) = upsert_property(&mut properties, ident, ty, Some(init_expr)) {
                 return err;
             }
         } else if let Some((ident, expr)) = extract_subscribe(stmt) {

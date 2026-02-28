@@ -90,6 +90,55 @@ pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
     None
 }
 
+/// Extracts an observe like:
+///   observe!(AppState, |page, window, cx| { ... });
+/// returns (state_type, callback_expr).
+pub fn extract_observe(stmt: &Stmt) -> Option<(syn::Type, Expr)> {
+    if let Stmt::Macro(mac_stmt) = stmt {
+        let mac = &mac_stmt.mac;
+        if mac.path.is_ident("observe") {
+            use syn::Token;
+            use syn::parse::{Parse, ParseStream, Result};
+            use syn::Type;
+
+            struct Observe {
+                state_ty: Type,
+                _comma_1: Token![,],
+                callback: Expr,
+            }
+
+            impl Parse for Observe {
+                fn parse(input: ParseStream) -> Result<Self> {
+                    let state_ty: Type = input.parse()?;
+                    let comma_1: Token![,] = input.parse()?;
+                    let mut callback: Expr = input.parse()?;
+
+                    if let Expr::Closure(ref mut closure) = callback {
+                        if closure.capture.is_none() {
+                            closure.capture = Some(syn::token::Move {
+                                span: proc_macro2::Span::call_site(),
+                            });
+                        }
+                    }
+
+                    Ok(Observe {
+                        state_ty,
+                        _comma_1: comma_1,
+                        callback,
+                    })
+                }
+            }
+
+            if let Ok(observe) = syn::parse2::<Observe>(mac.tokens.clone()) {
+                let state_ty = observe.state_ty;
+                let callback = observe.callback;
+                return Some((state_ty, callback));
+            }
+        }
+    }
+    None
+}
+
 /// Extracts a statement like:
 ///   with_context_in_init!();
 /// returns true if found

@@ -1,7 +1,7 @@
 use core::str;
 
 use gpui::*;
-use gpui_component::input::{Input, InputEvent, InputState};
+use gpui_component::input::{Input, InputState};
 use gpui_component::*;
 use rfd::AsyncFileDialog;
 use simple_gpui_core::component;
@@ -40,7 +40,7 @@ fn main() {
 fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
     init_with_context!();
     component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).multi_line(true)));
-    component_property!(_app_state_observer: Subscription = cx.observe_global_in::<AppState>(window, |page, window, cx| {
+    observe!(AppState, |page, window, cx| {
         let app_state = cx.global::<AppState>();
         let content = app_state.content.clone();
         println!("AppState changed: content={}", content);
@@ -49,7 +49,7 @@ fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         });
 
         cx.notify();
-    }));
+    });
 
     v_flex()
         .p_5()

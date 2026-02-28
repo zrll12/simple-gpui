@@ -11,6 +11,7 @@ Simple GPUI 是一个 Rust 库,为构建 GPUI 应用程序提供了简化的基�
 - **组件宏**:使用 `#[component]` 属性宏简化组件创建
 - **响应式属性**:定义组件属性并自动生成 getter/setter 方法
 - **事件订阅**:使用 `subscribe!` 宏轻松处理事件
+- **全局状态观察**:使用 `observe!` 宏观察全局状态变化
 - **上下文管理**:使用 `init_with_context!` 简化上下文访问
 - **类型安全**:完整的 Rust 类型安全和编译时保证
 
@@ -100,6 +101,36 @@ fn input_example(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElem
 }
 ```
 
+#### 全局状态观察
+
+使用 `observe!` 宏观察全局状态变化:
+
+```rust
+#[derive(Default)]
+struct AppState {
+    content: SharedString,
+}
+impl Global for AppState {}
+
+#[component]
+fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    init_with_context!();
+    component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).multi_line(true)));
+
+    observe!(AppState, |this, window, cx| {
+        let app_state = cx.global::<AppState>();
+        let content = app_state.content.clone();
+        this.input_state.update(cx, |input, cx| input.set_value(content, window, cx));
+        cx.notify();
+    });
+
+    div().child(Input::new(&self.input_state))
+}
+```
+
+`observe!` 会自动展开为内部的 `Subscription` 组件属性。
+在同一个组件内按声明顺序自动命名为: `_ob_1`、`_ob_2` ...
+
 #### 上下文访问
 
 当您需要在属性初始化期间访问 window 或 context 时,使用 `init_with_context!()`:
@@ -121,14 +152,16 @@ fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoEleme
 
 1. **hello_world.rs** - 带属性的基本组件
 2. **gpui_component_input.rs** - 带事件订阅的输入处理
-3. **temperature_caculator.rs** - 带标签和输入验证的温度转换器
+3. **temperature_calculator.rs** - 带标签和输入验证的温度转换器
+4. **global_observe.rs** - 全局状态观察与输入联动更新
 
 运行示例:
 
 ```bash
 cargo run --example hello_world
 cargo run --example gpui_component_input
-cargo run --example temperature_caculator
+cargo run --example temperature_calculator
+cargo run --example global_observe
 ```
 
 ### 项目结构
