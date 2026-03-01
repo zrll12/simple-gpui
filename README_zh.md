@@ -2,21 +2,7 @@
 
 [English](./README.md)
 
-### 概述
-
-Simple GPUI 是一个 Rust 库,为构建 GPUI 应用程序提供了简化的基于组件的框架。它通过过程宏提供了一种声明式的方法来创建 UI 组件,使 GPUI 开发更加直观和符合人体工程学。
-
-### 特性
-
-- **组件宏**:使用 `#[component]` 属性宏简化组件创建
-- **无状态组件宏**:使用 `#[component_stateless]` 构建 `RenderOnce` 组件
-- **响应式属性**:定义组件属性并自动生成 getter/setter 方法
-- **事件订阅**:使用 `subscribe!` 宏轻松处理事件
-- **全局状态观察**:使用 `observe!` 宏观察全局状态变化
-- **上下文管理**:使用 `init_with_context!` 简化上下文访问
-- **类型安全**:完整的 Rust 类型安全和编译时保证
-
-### 安装
+### 快速开始
 
 在您的 `Cargo.toml` 中添加:
 
@@ -27,9 +13,13 @@ gpui = "0.2.2"
 gpui-component = "0.3.1"
 ```
 
-### 快速开始
+然后运行示例:
 
-这是一个简单的 "Hello World" 示例:
+```bash
+cargo run --example hello_world
+```
+
+最小示例:
 
 ```rust
 use gpui::*;
@@ -56,171 +46,6 @@ fn main() {
 }
 ```
 
-### 核心概念
+完整文档、指南与 API 说明请查看 Wiki:
 
-#### 组件属性
-
-使用 `component_property!` 宏定义组件属性:
-
-```rust
-#[component]
-fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-    // 带有默认值的属性
-    component_property!(count: i32 = 0);
-    
-    // 不带默认值的属性(必须在构造时设置)
-    component_property!(name: SharedString);
-    
-    div().child(format!("{}: {}", self.name, self.count))
-}
-```
-
-`component_property!` 存在内部保留前缀。当前以 `_ob_` 开头的名称保留给 `observe!` 自动生成的属性，手动声明会触发编译错误。
-
-```rust
-// ❌ 编译错误: `_ob_` 前缀是保留的
-component_property!(_ob_custom: Subscription);
-```
-
-#### 无状态组件
-
-使用 `#[component_stateless]` 可以把函数转换成 `RenderOnce` 组件，并自动 `derive IntoElement`:
-
-```rust
-use gpui::*;
-use simple_gpui_core::component_stateless;
-
-#[component_stateless]
-fn badge(_window: &mut Window, _cx: &mut App) -> impl IntoElement {
-    component_property!(text: SharedString = "New".into());
-
-    div().child(self.text)
-}
-```
-
-`#[component_stateless]` 适用于可复用的无状态元素组件。它支持 `component_property!`，但不支持 `subscribe!`、`observe!` 和 `init_with_context!`。
-
-#### 事件订阅
-
-使用 `subscribe!` 宏订阅实体的事件:
-
-```rust
-#[component]
-fn input_example(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-    init_with_context!();
-    component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx)));
-    component_property!(text: SharedString = SharedString::new(""));
-    
-    subscribe!(input_state, |this, _, ev: &InputEvent, _window, cx| {
-        match ev {
-            InputEvent::Change => {
-                this.text = input_state.read(cx).value();
-                cx.notify()
-            }
-            _ => {}
-        }
-    });
-    
-    v_flex()
-        .child(TextInput::new(&self.input_state))
-        .child(format!("您输入了: {}", &self.text))
-}
-```
-
-#### 全局状态观察
-
-使用 `observe!` 宏观察全局状态变化:
-
-```rust
-#[derive(Default)]
-struct AppState {
-    content: SharedString,
-}
-impl Global for AppState {}
-
-#[component]
-fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-    init_with_context!();
-    component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).multi_line(true)));
-
-    observe!(AppState, |this, window, cx| {
-        let app_state = cx.global::<AppState>();
-        let content = app_state.content.clone();
-        this.input_state.update(cx, |input, cx| input.set_value(content, window, cx));
-        cx.notify();
-    });
-
-    div().child(Input::new(&self.input_state))
-}
-```
-
-`observe!` 会自动展开为内部的 `Subscription` 组件属性。
-在同一个组件内按声明顺序自动命名为: `_ob_1`、`_ob_2` ...
-因此 `_ob_` 名称属于内部保留，不应通过 `component_property!` 手动定义。
-
-#### 上下文访问
-
-当您需要在属性初始化期间访问 window 或 context 时,使用 `init_with_context!()`:
-
-```rust
-#[component]
-fn my_component(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-    init_with_context!();
-    // 现在您可以在属性初始化器中使用 'window' 和 'cx'
-    component_property!(state: Entity<MyState> = cx.new(|cx| MyState::new(window, cx)));
-    
-    div().child("内容")
-}
-```
-
-### 示例
-
-仓库包含几个示例:
-
-1. **hello_world.rs** - 带属性的基本组件
-2. **gpui_component_input.rs** - 带事件订阅的输入处理
-3. **temperature_calculator.rs** - 带标签和输入验证的温度转换器
-4. **global_observe.rs** - 全局状态观察与输入联动更新
-
-运行示例:
-
-```bash
-cargo run --example hello_world
-cargo run --example gpui_component_input
-cargo run --example temperature_calculator
-cargo run --example global_observe
-```
-
-### 项目结构
-
-```
-simple-gpui/
-├── src/                    # 主库导出
-├── simple_gpui_core/       # 核心过程宏
-│   ├── src/
-│   │   ├── lib.rs         # 组件宏实现
-│   │   ├── extractors.rs  # 宏解析逻辑
-│   │   └── methods.rs     # 方法代码生成
-├── examples/               # 示例应用
-└── Cargo.toml
-```
-
-### 工作原理
-
-`#[component]` 宏将您的函数转换为一个结构体,包括:
-
-1. **生成的结构体**,为每个 `component_property!` 生成字段
-2. **new() 方法**用于初始化
-3. **Setter 方法**用于每个属性
-4. **Render trait 实现**使用您的函数体
-5. **订阅管理**用于事件处理器
-
-### 要求
-
-- Rust 2024 版或更高版本
-- GPUI 0.2.2+
-- gpui-component 0.3.1+
-
-### 贡献
-
-欢迎贡献!请随时提交 Pull Request。
+https://github.com/zrll12/simple-gpui/wiki
