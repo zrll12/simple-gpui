@@ -9,7 +9,7 @@ use syn::{Expr, Ident, ItemFn, Stmt, parse_quote};
 pub(crate) struct ParsedComponentBody {
     pub(crate) properties: Vec<(Ident, syn::Type, Option<Expr>)>,
     pub(crate) new_stmts: Vec<Stmt>,
-    pub(crate) subscribes: Vec<(Ident, Expr)>,
+    pub(crate) subscriptions: Vec<Expr>,
 }
 
 #[derive(Clone, Copy)]
@@ -24,8 +24,7 @@ pub(crate) fn collect_component_body(
 ) -> Result<ParsedComponentBody, TokenStream> {
     let mut properties: Vec<(Ident, syn::Type, Option<Expr>)> = Vec::new();
     let mut new_stmts: Vec<Stmt> = Vec::new();
-    let mut subscribes: Vec<(Ident, Expr)> = Vec::new();
-    let mut observe_index: usize = 0;
+    let mut subscriptions: Vec<Expr> = Vec::new();
 
     for stmt in &func.block.stmts {
         match extract_component_property(stmt) {
@@ -51,15 +50,10 @@ pub(crate) fn collect_component_body(
                 .into());
             }
 
-            observe_index += 1;
-            let ident = format_ident!("_ob_{}", observe_index);
-            let ty: syn::Type = parse_quote!(Subscription);
             let init_expr: Expr = parse_quote!(
                 cx.observe_global_in::<#state_ty>(window, #callback)
             );
-            if let Err(err) = upsert_property(&mut properties, ident, ty, Some(init_expr)) {
-                return Err(err);
-            }
+            subscriptions.push(init_expr);
             continue;
         }
 
@@ -73,7 +67,14 @@ pub(crate) fn collect_component_body(
                 .into());
             }
 
-            subscribes.push((ident.clone(), expr.clone()));
+            let subscription_expr: Expr = parse_quote! {
+                {
+                    let __subscribe_target = #ident.clone();
+                    let #ident = __subscribe_target.clone();
+                    cx.subscribe_in(&__subscribe_target, window, #expr)
+                }
+            };
+            subscriptions.push(subscription_expr);
             continue;
         }
 
@@ -104,7 +105,7 @@ pub(crate) fn collect_component_body(
     Ok(ParsedComponentBody {
         properties,
         new_stmts,
-        subscribes,
+        subscriptions,
     })
 }
 

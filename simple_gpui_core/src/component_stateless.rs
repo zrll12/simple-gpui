@@ -18,7 +18,7 @@ pub(crate) fn component_stateless_impl(item: TokenStream) -> TokenStream {
 
     let field_defs = build_field_defs(&parsed.properties, true);
 
-    let function_new = methods::generate_new_method(&parsed.properties, &[]);
+    let function_new = methods::generate_new_method(&parsed.properties, &parsed.subscriptions);
     let function_setters = methods::generate_set_method(&parsed.properties);
 
     let inputs = &func.sig.inputs;

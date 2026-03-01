@@ -17,11 +17,11 @@ pub(crate) fn component_impl(item: TokenStream) -> TokenStream {
 
     let mut field_defs = build_field_defs(&parsed.properties, false);
 
-    if !parsed.subscribes.is_empty() {
+    if !parsed.subscriptions.is_empty() {
         field_defs.push(quote! { _subscriptions: Vec<Subscription> })
     }
 
-    let function_new = methods::generate_new_method(&parsed.properties, &parsed.subscribes);
+    let function_new = methods::generate_new_method(&parsed.properties, &parsed.subscriptions);
     let function_setters = methods::generate_set_method(&parsed.properties);
 
     let inputs = &func.sig.inputs;

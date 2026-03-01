@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/simple_gpui_core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/simple_gpui_core/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/simple_gpui_core/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

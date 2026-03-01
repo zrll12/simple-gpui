@@ -1,20 +1,11 @@
 use proc_macro2::Ident;
 use syn::{Expr, Stmt};
 
-const RESERVED_COMPONENT_PROPERTY_PREFIXES: &[&str] = &["ob"];
+const RESERVED_COMPONENT_PROPERTY_NAMES: &[&str] = &["_subscriptions"];
 
-fn get_reserved_component_property_prefix(ident: &Ident) -> Option<String> {
+fn is_reserved_component_property_name(ident: &Ident) -> bool {
     let name = ident.to_string();
-    RESERVED_COMPONENT_PROPERTY_PREFIXES
-        .iter()
-        .find_map(|prefix| {
-            let resolved_prefix = format!("_{}_", prefix);
-            if name.starts_with(&resolved_prefix) {
-                Some(resolved_prefix)
-            } else {
-                None
-            }
-        })
+    RESERVED_COMPONENT_PROPERTY_NAMES.contains(&name.as_str())
 }
 
 /// Extracts a statement like:
@@ -56,14 +47,10 @@ pub fn extract_component_property(
 
             let tokens = mac.tokens.clone();
             if let Ok(prop) = syn::parse2::<Prop>(tokens) {
-                if let Some(reserved_prefix) = get_reserved_component_property_prefix(&prop.name)
-                {
+                if is_reserved_component_property_name(&prop.name) {
                     return Err(syn::Error::new(
                         prop.name.span(),
-                        format!(
-                            "`{}` prefix is reserved for observe-generated properties",
-                            reserved_prefix
-                        ),
+                        "`_subscriptions` is reserved for framework-managed subscriptions",
                     ));
                 }
                 return Ok(Some((prop.name, prop.ty, prop.init)));

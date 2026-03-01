@@ -5,14 +5,10 @@ fn is_runtime_context_param(ident: &proc_macro2::Ident) -> bool {
     name == "cx" || name == "window"
 }
 
-fn is_observe_property(ident: &proc_macro2::Ident) -> bool {
-    ident.to_string().starts_with("_ob_")
-}
-
 // Generates a new methods, all fields without initializers will be required as parameters.
 pub fn generate_new_method(
     properties: &[(proc_macro2::Ident, syn::Type, Option<syn::Expr>)],
-    subscribes: &[(proc_macro2::Ident, syn::Expr)],
+    subscriptions: &[syn::Expr],
 ) -> proc_macro2::TokenStream {
     let mut no_initiated_fields = vec![];
     let mut initiated_fields = vec![];
@@ -34,7 +30,7 @@ pub fn generate_new_method(
             Some(quote! { #ident })
         })
         .collect();
-    if subscribes.len() > 0 {
+    if !subscriptions.is_empty() {
         field_inits.push(quote! { _subscriptions })
     }
 
@@ -60,23 +56,17 @@ pub fn generate_new_method(
         })
         .collect();
 
-    let subscribe_inits: Vec<proc_macro2::TokenStream> = subscribes
+    let subscription_inits: Vec<proc_macro2::TokenStream> = subscriptions
         .iter()
-        .map(|(ident, expr)| {
-            quote! {
-                {
-                    let __subscribe_target = #ident.clone();
-                    let #ident = __subscribe_target.clone();
-                    cx.subscribe_in(&__subscribe_target, window, #expr)
-                }
-            }
+        .map(|expr| {
+            quote! { #expr }
         })
         .collect();
 
-    let subscriptions_init = if !subscribes.is_empty() {
+    let subscriptions_init = if !subscription_inits.is_empty() {
         quote! {
             let _subscriptions: Vec<Subscription> = vec![
-                #(#subscribe_inits),*
+                #(#subscription_inits),*
             ];
         }
     } else {
@@ -102,9 +92,6 @@ pub fn generate_set_method(
         .iter()
         .filter_map(|(ident, ty, _init)| {
             if is_runtime_context_param(ident) {
-                return None;
-            }
-            if is_observe_property(ident) {
                 return None;
             }
             let method_name = format_ident!("{}", ident);
