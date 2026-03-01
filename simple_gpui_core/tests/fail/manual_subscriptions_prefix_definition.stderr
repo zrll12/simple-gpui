@@ -1,5 +1,5 @@
 error: `_subscriptions` is reserved for framework-managed subscriptions
- --> tests/fail/manual__prefix_definition.rs:5:25
+ --> tests/fail/manual_subscriptions_prefix_definition.rs:5:25
   |
 5 |     component_property!(_subscriptions: Vec<Subscription> = vec![]);
   |                         ^^^^^^^^^^^^^^

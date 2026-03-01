@@ -18,7 +18,14 @@ macro_rules! init_with_context {
 #[macro_export]
 macro_rules! subscribe {
     ($($t:tt)*) => {
-        unreachable!("subscribe! should only be used inside a #[component] function, and in subscribe!(ident, closure) form");
+        unreachable!("subscribe! should only be used inside a #[component] function, and in subscribe!(entity, closure) form (maps to cx.subscribe)");
+    };
+}
+
+#[macro_export]
+macro_rules! subscribe_in {
+    ($($t:tt)*) => {
+        unreachable!("subscribe_in! should only be used inside a #[component] function, and in subscribe_in!(entity, closure) form (maps to cx.subscribe_in)");
     };
 }
 

@@ -61,7 +61,7 @@ pub fn extract_component_property(
 }
 
 /// Extracts a subscribe like:
-///   subscribe!(state_ident, impl FnMut(&mut T, &Entity<Emitter>, &Evt, &mut Window, &mut Context<T>) + 'static);
+///   subscribe!(state_ident, impl FnMut(&mut T, Entity<Emitter>, &Evt, &mut Context<T>) + 'static);
 /// returns (ident, closure_expr)
 pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
     if let Stmt::Macro(mac_stmt) = stmt {
@@ -91,6 +91,51 @@ pub fn extract_subscribe(stmt: &Stmt) -> Option<(Ident, Expr)> {
 
             let tokens = mac.tokens.clone();
             if let Ok(mut sub) = syn::parse2::<Subscribe>(tokens) {
+                if let Expr::Closure(ref mut closure) = sub.closure {
+                    if closure.capture.is_none() {
+                        closure.capture = Some(syn::token::Move {
+                            span: proc_macro2::Span::call_site(),
+                        });
+                    }
+                }
+                return Some((sub.ident, sub.closure));
+            }
+        }
+    }
+    None
+}
+
+/// Extracts a subscribe_in like:
+///   subscribe_in!(state_ident, impl FnMut(&mut T, &Entity<Emitter>, &Evt, &mut Window, &mut Context<T>) + 'static);
+/// returns (ident, closure_expr)
+pub fn extract_subscribe_in(stmt: &Stmt) -> Option<(Ident, Expr)> {
+    if let Stmt::Macro(mac_stmt) = stmt {
+        let mac = &mac_stmt.mac;
+        if mac.path.is_ident("subscribe_in") {
+            use syn::Token;
+            use syn::parse::{Parse, ParseStream, Result};
+
+            struct SubscribeIn {
+                ident: Ident,
+                _comma: Token![,],
+                closure: Expr,
+            }
+
+            impl Parse for SubscribeIn {
+                fn parse(input: ParseStream) -> Result<Self> {
+                    let ident: Ident = input.parse()?;
+                    let _comma: Token![,] = input.parse()?;
+                    let closure: Expr = input.parse()?;
+                    Ok(SubscribeIn {
+                        ident,
+                        _comma,
+                        closure,
+                    })
+                }
+            }
+
+            let tokens = mac.tokens.clone();
+            if let Ok(mut sub) = syn::parse2::<SubscribeIn>(tokens) {
                 if let Expr::Closure(ref mut closure) = sub.closure {
                     if closure.capture.is_none() {
                         closure.capture = Some(syn::token::Move {
