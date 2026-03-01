@@ -1,5 +1,5 @@
 use crate::extractors::{
-    extract_component_entity, extract_component_property, extract_observe, extract_subscribe, extract_subscribe_in,
+    extract_component_entity, extract_component_property, extract_observe, extract_subscribe,
     extract_with_context,
 };
 use crate::upsert_property;
@@ -76,27 +76,6 @@ pub(crate) fn collect_component_body(
                 return Err(syn::Error::new_spanned(
                     stmt,
                     "subscribe! is not supported in #[component_stateless]. Please migrate this component to #[component] and then use subscribe!.",
-                )
-                .into_compile_error()
-                .into());
-            }
-
-            let subscription_expr: Expr = parse_quote! {
-                {
-                    let __subscribe_target = #ident.clone();
-                    let #ident = __subscribe_target.clone();
-                    cx.subscribe(&__subscribe_target, #expr)
-                }
-            };
-            subscriptions.push(subscription_expr);
-            continue;
-        }
-
-        if let Some((ident, expr)) = extract_subscribe_in(stmt) {
-            if matches!(mode, ParseMode::Stateless) {
-                return Err(syn::Error::new_spanned(
-                    stmt,
-                    "subscribe_in! is not supported in #[component_stateless]. Please migrate this component to #[component] and then use subscribe_in!.",
                 )
                 .into_compile_error()
                 .into());

@@ -9,7 +9,7 @@ fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElemen
     init_with_context!();
     component_entity!(input_state: InputState = InputState::new(window, cx).placeholder("Enter your name"));
     component_property!(text: SharedString = SharedString::new("World"));
-    subscribe_in!(input_state, |view, _state, event, _window, cx| {
+    subscribe!(input_state, |view, _state, event, _window, cx| {
         if let InputEvent::Change = event {
             let value = input_state.read(cx).value();
             view.text = value.clone();

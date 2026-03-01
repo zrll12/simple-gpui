@@ -10,7 +10,7 @@ fn calculator(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement
     component_entity!(input_state: InputState = InputState::new(window, cx).validate(|s, _| s.parse::<f32>().is_ok()));
     component_property!(input: f32 = 0.);
     component_property!(selected: usize = 0);
-    subscribe_in!(input_state, |view, _state, event, _window, cx| {
+    subscribe!(input_state, |view, _state, event, _window, cx| {
         if let InputEvent::Change = event {
             let value = input_state.read(cx).value();
             if let Ok(c) = value.parse::<f32>() {

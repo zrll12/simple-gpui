@@ -1,5 +1,0 @@
-error: subscribe_in! is not supported in #[component_stateless]. Please migrate this component to #[component] and then use subscribe_in!.
- --> tests/fail/stateless_subscribe_in.rs:5:5
-  |
-5 |     subscribe_in!(state, |_, _, _, _, _| {});
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
