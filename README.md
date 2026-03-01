@@ -2,6 +2,8 @@
 
 [中文文档](./README_zh.md)
 
+> **Note:** This library is still evolving alongside my gpui project, so there is a high likelihood of additional breaking changes until we reach version 1.0.0, which will be released once my gpui project is complete and everything is confirmed to work smoothly.
+
 ### Quick Start
 
 Add this to your `Cargo.toml`:
