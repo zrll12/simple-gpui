@@ -5149,7 +5149,7 @@ dependencies = [
 
 [[package]]
 name = "simple-gpui"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "gpui",
  "gpui-component",
@@ -5159,7 +5159,7 @@ dependencies = [
 
 [[package]]
 name = "simple_gpui_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "case",
  "proc-macro2",
