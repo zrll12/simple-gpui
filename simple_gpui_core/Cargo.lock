@@ -119,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "simple_gpui_core"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "case",
  "proc-macro2",
