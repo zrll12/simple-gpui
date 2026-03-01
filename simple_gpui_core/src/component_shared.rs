@@ -1,5 +1,5 @@
 use crate::extractors::{
-    extract_component_property, extract_observe, extract_subscribe, extract_subscribe_in,
+    extract_component_entity, extract_component_property, extract_observe, extract_subscribe, extract_subscribe_in,
     extract_with_context,
 };
 use crate::upsert_property;
@@ -28,6 +28,19 @@ pub(crate) fn collect_component_body(
     let mut subscriptions: Vec<Expr> = Vec::new();
 
     for stmt in &func.block.stmts {
+        match extract_component_entity(stmt) {
+            Ok(Some((ident, ty, init_expr))) => {
+                if let Err(err) = upsert_property(&mut properties, ident, ty, init_expr) {
+                    return Err(err);
+                }
+                continue;
+            }
+            Err(err) => {
+                return Err(err.into_compile_error().into());
+            }
+            Ok(None) => {}
+        }
+
         match extract_component_property(stmt) {
             Ok(Some((ident, ty, init_expr))) => {
                 if let Err(err) = upsert_property(&mut properties, ident, ty, init_expr) {

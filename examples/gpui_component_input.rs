@@ -1,14 +1,13 @@
 use gpui::*;
 use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::*;
-use simple_gpui::component_property;
 use simple_gpui_core::component;
 
 #[component]
 // Window and cx here are not the same as in the property definition. Maybe you can rename them?
 fn hello_world(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
     init_with_context!();
-    component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).placeholder("Enter your name")));
+    component_entity!(input_state: InputState = InputState::new(window, cx).placeholder("Enter your name"));
     component_property!(text: SharedString = SharedString::new("World"));
     subscribe_in!(input_state, |view, _state, event, _window, cx| match event {
         InputEvent::Change => {

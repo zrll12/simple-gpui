@@ -60,6 +60,63 @@ pub fn extract_component_property(
     Ok(None)
 }
 
+/// Extracts a statement like:
+///   component_entity!(name: Type = expr);
+///   component_entity!(name: Type);
+/// returns (ident, Entity<ty>, expr)
+pub fn extract_component_entity(
+    stmt: &Stmt,
+) -> Result<Option<(Ident, syn::Type, Option<Expr>)>, syn::Error> {
+    if let Stmt::Macro(mac_stmt) = stmt {
+        let mac = &mac_stmt.mac;
+        if mac.path.is_ident("component_entity") {
+            use syn::parse::{Parse, ParseStream, Result};
+
+            struct Prop {
+                name: Ident,
+                _colon_token: syn::token::Colon,
+                ty: syn::Type,
+                _eq_token: Option<syn::token::Eq>,
+                init: Option<Expr>,
+            }
+
+            impl Parse for Prop {
+                fn parse(input: ParseStream) -> Result<Self> {
+                    let name: Ident = input.parse()?;
+                    let colon_token: syn::token::Colon = input.parse()?;
+                    let ty: syn::Type = input.parse()?;
+                    let eq_token: Option<syn::token::Eq> = input.parse().ok();
+                    let init: Option<Expr> = input.parse().ok();
+                    Ok(Prop {
+                        name,
+                        _colon_token: colon_token,
+                        ty,
+                        _eq_token: eq_token,
+                        init,
+                    })
+                }
+            }
+
+            let tokens = mac.tokens.clone();
+            if let Ok(prop) = syn::parse2::<Prop>(tokens) {
+                if is_reserved_component_property_name(&prop.name) {
+                    return Err(syn::Error::new(
+                        prop.name.span(),
+                        "`_subscriptions` is reserved for framework-managed subscriptions",
+                    ));
+                }
+                let ty = prop.ty;
+                let entity_ty: syn::Type = syn::parse_quote!(Entity<#ty>);
+                let init = prop
+                    .init
+                    .map(|expr| syn::parse_quote!(cx.new(|cx| #expr)));
+                return Ok(Some((prop.name, entity_ty, init)));
+            }
+        }
+    }
+    Ok(None)
+}
+
 /// Extracts a subscribe like:
 ///   subscribe!(state_ident, impl FnMut(&mut T, Entity<Emitter>, &Evt, &mut Context<T>) + 'static);
 /// returns (ident, closure_expr)

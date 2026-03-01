@@ -39,7 +39,7 @@ fn main() {
 #[component]
 fn editor(_window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
     init_with_context!();
-    component_property!(input_state: Entity<InputState> = cx.new(|cx| InputState::new(window, cx).multi_line(true)));
+    component_entity!(input_state: InputState = InputState::new(window, cx).multi_line(true));
     observe!(AppState, |page, window, cx| {
         let app_state = cx.global::<AppState>();
         let content = app_state.content.clone();
